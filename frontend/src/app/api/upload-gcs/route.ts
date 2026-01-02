@@ -7,7 +7,9 @@ import { tmpdir } from "os";
 
 // Initialize Google Cloud Storage
 const storage = new Storage({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  credentials: process.env.GOOGLE_APPLICATION_CREDENTIALS
+    ? JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+    : undefined,
   projectId: process.env.GCLOUD_PROJECT_ID,
 });
 
