@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Storage } from "@google-cloud/storage";
 import * as XLSX from "xlsx";
-import { writeFile, unlink } from "fs/promises";
-import { join } from "path";
-import { tmpdir } from "os";
 
 // Initialize Google Cloud Storage
 const storage = new Storage({
@@ -41,18 +38,14 @@ async function findOrCreateExcelFile() {
       bookType: "xlsx",
     });
 
-    const tempPath = join(tmpdir(), EXCEL_FILE_NAME);
-    await writeFile(tempPath, excelBuffer);
-
-    await bucket.upload(tempPath, {
-      destination: EXCEL_FILE_NAME,
+    const file = bucket.file(EXCEL_FILE_NAME);
+    await file.save(excelBuffer, {
       metadata: {
         contentType:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
 
-    await unlink(tempPath);
     return EXCEL_FILE_NAME;
   } catch (error) {
     console.error("Error finding/creating Excel file:", error);
@@ -66,13 +59,11 @@ async function updateExcelFile(
   userName: string
 ) {
   try {
-    // Download existing Excel file
-    const tempPath = join(tmpdir(), `temp-${fileName}`);
+    // Download existing Excel file to buffer
     const file = bucket.file(fileName);
+    const [contents] = await file.download();
 
-    await file.download({ destination: tempPath });
-
-    const workbook = XLSX.readFile(tempPath);
+    const workbook = XLSX.read(contents, { type: "buffer" });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 
     // Convert to JSON to append new row
@@ -97,17 +88,13 @@ async function updateExcelFile(
       bookType: "xlsx",
     });
 
-    await writeFile(tempPath, excelBuffer);
-
-    await bucket.upload(tempPath, {
-      destination: fileName,
+    await file.save(excelBuffer, {
       metadata: {
         contentType:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       },
     });
 
-    await unlink(tempPath);
     return true;
   } catch (error) {
     console.error("Error updating Excel file:", error);
@@ -133,18 +120,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save file temporarily
+    // Get file buffer directly
     const buffer = Buffer.from(await file.arrayBuffer());
-    const tempPath = join(tmpdir(), file.name);
-    await writeFile(tempPath, buffer);
 
     // Generate unique filename
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     const gcsFileName = `uploads/${uniqueSuffix}-${file.name}`;
 
     // Upload to Google Cloud Storage
-    await bucket.upload(tempPath, {
-      destination: gcsFileName,
+    await bucket.file(gcsFileName).save(buffer, {
       metadata: {
         contentType: file.type,
         metadata: {
@@ -169,9 +153,6 @@ export async function POST(request: NextRequest) {
       `${file.name} (${gcsFileName})`,
       userName || "Anonymous"
     );
-
-    // Clean up temp file
-    await unlink(tempPath);
 
     return NextResponse.json({
       success: true,
