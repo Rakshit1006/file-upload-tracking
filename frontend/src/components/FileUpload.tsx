@@ -204,10 +204,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
         <input
           type="text"
           id="userName"
+          required={true}
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
           placeholder="Enter your name"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={uploadState.status === "uploading"}
         />
       </div>
@@ -311,9 +312,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <li>• Enter your name (required)</li>
           <li>• Select a file by dragging & dropping or clicking</li>
           <li>• Maximum file size: 10MB</li>
-          <li>• Files will be uploaded to Google Drive</li>
-          <li>• An Excel tracker will be updated with file details</li>
-          <li>• Automatic retry on failure (max 3 attempts)</li>
         </ul>
       </div>
     </div>
