@@ -8,10 +8,10 @@ export default function Home() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Google Drive File Upload
+            Please upload your files here
           </h1>
           <p className="text-lg text-gray-600">
-            Upload files to Google Drive with automatic Excel tracking
+            Contact us at +91 9582693059 for any queries
           </p>
         </div>
 
